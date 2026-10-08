@@ -1,4 +1,4 @@
-from colors import print_error, print_exito, print_alerta
+from colors import print_error, print_exito, print_alerta, print_azul
 
 
 diccionario_flota = {} 
@@ -9,9 +9,10 @@ while estado_sistema:
     print("1. Registrar Aeronave")
     print("2. Registrar Componente Critico")
     print("3. Reporte de Mantenimiento - Consultar")
-    print("4. Salir")
+    print("4. Actualizacion Horas Componente Critico")
+    print("5. Salir")
 
-    opcion = input("------ Seleccione una opcion (1-4): ").strip()
+    opcion = input("------ Seleccione una opcion (1-5): ").strip()
 
     if opcion == "1":
         print("------ Opcion 1 Seleccionada - REGISTRO DE LA AERONAVE")
@@ -79,7 +80,6 @@ while estado_sistema:
 
     elif opcion == "3":
             print("------ REPORTE DE ALERTAS DE MANTENIMIENTO")
-
     
             indicador_alertas = False
     
@@ -87,29 +87,79 @@ while estado_sistema:
                 datos_aeronave = diccionario_flota[matricula]
                 lista_piezas = datos_aeronave["componentes"]
 
+
+                print(f"\n------ AERONAVE Matrícula: {matricula} | Modelo: {datos_aeronave['modelo']}")
+                
                 if datos_aeronave["horas"] >= datos_aeronave["horas_maximas"]:
                     indicador_alertas = True 
-                    print_alerta(f"------ [ALERTA AERONAVE] matricula             : {matricula}")
-                    print_alerta(f"------ Modelo                                  : {datos_aeronave['modelo']}")
-                    print_alerta(f"------ vuelo                                   : {datos_aeronave['horas']}")
-                    print_alerta(f"------ maximo permitido                        : {datos_aeronave['horas_maximas']}")                  
-    
+                    print_alerta(f"------ [ALERTA AERONAVE] Horas de vuelo: {datos_aeronave['horas']} / Max: {datos_aeronave['horas_maximas']}")                  
+                else:
+                    print(f"------ Horas de vuelo actuales: {datos_aeronave['horas']} / Max: {datos_aeronave['horas_maximas']}")
+
+                print("------ Componentes Instalados:")
+
+
                 for pieza in lista_piezas:
-                    if pieza["horas_uso"] >= pieza["limite_horas"]         :
+                    if pieza["horas_uso"] == 0:
+
+                        print_azul(f"   * {pieza['nombre']}: [NUEVO / RESETEADO] (Límite: {pieza['limite_horas']} horas)")
+                    
+                    elif pieza["horas_uso"] >= pieza["limite_horas"]:
+
                         indicador_alertas = True
-                        print_error(f"------ [ALERTA CRÍTICA] Matrícula Aeronave : {matricula}")
-                        print_alerta(f"------ Modelo                              : {datos_aeronave['modelo']}")
-                        print_alerta(f"------ Componente                          : {pieza['nombre']}")
-                        print_alerta(f"------ Horas Actuales                      : {pieza['horas_uso']}")
-                        print_alerta(f"------ Límite Operativo                    : {pieza['limite_horas']}")
-    
+                        print_error(f"   * [ALERTA CRÍTICA] {pieza['nombre']}: {pieza['horas_uso']} horas (Límite Máximo: {pieza['limite_horas']} horas)")
+                    
+                    else:
+
+                        print(f"   * {pieza['nombre']}: {pieza['horas_uso']} horas (Límite: {pieza['limite_horas']} horas)")
+                
+                if not lista_piezas:
+                    print("   * No hay componentes registrados para esta aeronave.")
+
+
+            print("\n----------------------------------------")
             if indicador_alertas:
                 print_error("!!! ALERTA: mantenimiento inmediato requerido !!!")
-
             else: 
                 print_exito("------ Estado Nominal: Ningún componente crítico requiere mantenimiento.")
 
+
+
+
     elif opcion == "4":
+        print("------ ACTUALIZAR / RESETEAR HORAS DE COMPONENTE")
+        matricula = input("Ingrese la matricula de la aeronave: ").strip().upper()
+
+        if matricula in diccionario_flota:
+            nombre_buscar = input("Ingrese el nombre del componente a modificar: ").strip().lower()
+            
+            componente_encontrado = None
+            for pieza in diccionario_flota[matricula]["componentes"]:
+                if pieza["nombre"].lower() == nombre_buscar:
+                    componente_encontrado = pieza
+                    break
+
+            if componente_encontrado:
+                print(f"Componente actual: {componente_encontrado['nombre']} | Horas actuales: {componente_encontrado['horas_uso']}")
+                entrada_nuevas_horas = input("Ingrese las nuevas horas de uso (0 para resetear): ").strip()
+
+                try:
+                    nuevas_horas = float(entrada_nuevas_horas)
+
+                    if nuevas_horas >= 0:
+                        componente_encontrado["horas_uso"] = nuevas_horas
+                        print_exito(f"------ Éxito: Horas del componente '{componente_encontrado['nombre']}' actualizadas a {nuevas_horas} hrs.")
+                    else:
+                        print_error("------ Error: Las horas de uso no pueden ser negativas.")
+                except ValueError:
+                    print_error("------ Error: El valor ingresado debe ser numérico.")
+            else:
+                print_error(f"------ Error: El componente '{nombre_buscar}' no está registrado en esta aeronave.")
+        else:
+            print_error(f"------ Error: La aeronave con matrícula '{matricula}' no existe.")
+
+
+    elif opcion == "5":
         estado_sistema = False
         print_exito("------ Terminando procesos de consola, Sistema cerrado exitosamente.")
     

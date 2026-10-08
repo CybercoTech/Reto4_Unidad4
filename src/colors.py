@@ -17,4 +17,6 @@ def print_exito(mensaje: str) -> None:
 def print_alerta(mensaje: str) -> None:
     print(f"{clr_alerta}{mensaje}{clr_reset}")
 
+def print_azul(texto):
+    print(f"\033[94m{texto}\033[0m")
 
